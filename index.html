@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Rozliczenie kierowcy – PIKER TAXI</title>
+<style>
+body {
+    font-family: Arial;
+    background: #f2f2f2;
+    padding: 0;
+    margin: 0;
+}
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    margin: auto;
+    background: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+input {
+    width: 100%;
+    padding: 8px;
+    margin: 4px 0 12px 0;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+input[readonly], input.auto-field {
+    background-color: #fff;
+    color: #000;
+    font-weight: normal;
+    opacity: 1;
+}
+.date-range {
+    display: flex;
+    gap: 12px;
+}
+.date-range > div {
+    flex: 1;
+}
+label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.history-panel {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 2px solid #ddd;
+}
+.history-item {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 8px;
+    background: #fafafa;
+}
+.history-item button {
+    width: auto;
+    padding: 7px 12px;
+    font-size: 13px;
+    margin: 7px 6px 0 0;
+}
+.history-empty { color: #666; font-size: 14px; }
+button {
+    width: 100%;
+    padding: 14px;
+    background: #f1c40f;
+    color: #000;
+    font-weight: bold;
+    border-radius: 6px;
+    font-size: 18px;
+    margin-top: 12px;
+    border: none;
+}
+.result {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+.calculation-detail {
+    font-size: 14px;
+    font-weight: normal;
+    margin-top: 4px;
+    line-height: 1.35;
+}
+.top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+@media print {
+    @page { size: A4 portrait; margin: 7mm; }
+    body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .page {
+        width: auto;
+        min-height: auto;
+        padding: 0;
+        margin: 0;
+        box-shadow: none;
+    }
+    .page > div:first-child { margin-bottom: 8px !important; }
+    .page > div:first-child img { width: 120px !important; margin-bottom: 3px !important; }
+    .page > div:first-child div { font-size: 18px !important; }
+    .top { margin-bottom: 6px; }
+    h2 { margin: 5px 0 7px; font-size: 18px; }
+    h3 { margin: 7px 0 2px; font-size: 15px; }
+    label { margin-top: 3px; font-size: 11px; }
+    input { padding: 3px; margin: 1px 0 3px 0; font-size: 12px; box-sizing: border-box; }
+    .result { font-size: 14px; margin-top: 2px; }
+    .calculation-detail { font-size: 10px; margin-top: 1px; line-height: 1.2; }
+    button, .history-panel { display: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- LOGO PIKER TAXI -->
+<div style="text-align:center; margin-bottom:25px;">
+    <img src="piker.jpg" alt="PIKER TAXI" style="width:180px; margin-bottom:10px;">
+    <div style="font-size:26px; font-weight:bold; color:#000;">PIKER TAXI</div>
+</div>
+
+<div class="top">
+    <div>
+        <label>Imię i nazwisko kierowcy:</label>
+        <input id="name" type="text">
+    </div>
+    <div>
+        <label>DATY:</label>
+        <div class="date-range">
+            <div>
+                <label>Od:</label>
+                <input id="dateFrom" type="date">
+            </div>
+            <div>
+                <label>Do:</label>
+                <input id="dateTo" type="date">
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2>Rozliczenie kierowcy</h2>
+
+<label>CAŁOŚĆ BOLT</label>
+<input id="bolt" type="number" placeholder="Kwota z aplikacji">
+<label>POŁOWA BOLT</label>
+<input id="halfBolt" class="auto-field" type="number" readonly>
+
+<label>GOTÓWKA</label>
+<input id="cash" type="number">
+
+<label>KARTA</label>
+<input id="card" type="number">
+<label>POŁOWA Z KARTY</label>
+<input id="halfCard" class="auto-field" type="number" readonly>
+
+<label>NAPIWKI</label>
+<input id="tips" type="number">
+
+<label>PALIWO</label>
+<input id="fuel" type="number">
+<label>POŁOWA PALIWA</label>
+<input id="halfFuel" class="auto-field" type="number" readonly>
+
+<label>POZA APK</label>
+<input id="outside" type="number">
+<label>POŁOWA POZA APK</label>
+<input id="halfOutside" class="auto-field" type="number" readonly>
+
+<label>ZUS / PODATKI</label>
+<input id="tax" class="auto-field" type="number" readonly>
+
+<h3>ZAROBEK KIEROWCY</h3>
+<div class="result" id="income"></div>
+<div class="calculation-detail" id="incomeDetail"></div>
+
+<h3>OBLICZANIE GOTÓWKI</h3>
+<div class="result" id="cashCalc"></div>
+<div class="calculation-detail" id="cashCalcDetail"></div>
+
+<h3>PODSUMOWANIE</h3>
+<div class="result" id="summary"></div>
+<div class="result" id="status"></div>
+
+<button onclick="calculate()">OBLICZ</button>
+<button onclick="saveSettlement()">ZAPISZ</button>
+<button onclick="clearAll()">WYCZYŚĆ WSZYSTKO</button>
+<button onclick="window.print()">DRUKUJ / PDF</button>
+
+<div class="history-panel">
+    <h3>HISTORIA ROZLICZEŃ</h3>
+    <div id="historyList"></div>
+</div>
+
+</div>
+
+<script>
+function calculate() {
+    let bolt = Number(document.getElementById("bolt").value);
+    let cash = Number(document.getElementById("cash").value);
+    let card = Number(document.getElementById("card").value);
+    let tips = Number(document.getElementById("tips").value);
+    let fuel = Number(document.getElementById("fuel").value);
+    let outside = Number(document.getElementById("outside").value);
+    let halfBolt = bolt / 2;
+    let tax = 25 + (halfBolt * 0.10);
+    let halfCard = card / 2;
+    let halfFuel = fuel / 2;
+    let halfOutside = outside / 2;
+
+    document.getElementById("halfBolt").value = halfBolt.toFixed(2);
+    document.getElementById("tax").value = tax.toFixed(2);
+    document.getElementById("halfCard").value = halfCard.toFixed(2);
+    document.getElementById("halfFuel").value = halfFuel.toFixed(2);
+    document.getElementById("halfOutside").value = halfOutside.toFixed(2);
+
+    let income = halfBolt + tips + halfCard + halfOutside - halfFuel - tax;
+    document.getElementById("income").innerHTML = income.toFixed(2) + " zł";
+    document.getElementById("incomeDetail").textContent =
+        halfBolt.toFixed(2) + " + " + tips.toFixed(2) + " + " + halfCard.toFixed(2) + " + " +
+        halfOutside.toFixed(2) + " - " + halfFuel.toFixed(2) + " - " + tax.toFixed(2) +
+        " = " + income.toFixed(2) + " zł";
+
+    let cashCalc = cash + outside - fuel;
+    document.getElementById("cashCalc").innerHTML = cashCalc.toFixed(2) + " zł";
+    document.getElementById("cashCalcDetail").textContent =
+        cash.toFixed(2) + " + " + outside.toFixed(2) + " - " + fuel.toFixed(2) +
+        " = " + cashCalc.toFixed(2) + " zł";
+
+    let summary = cashCalc - income;
+    document.getElementById("summary").innerHTML = summary.toFixed(2) + " zł";
+
+    let status = summary < 0 ? "DLA KIEROWCY" : "DLA PIKER";
+    document.getElementById("status").innerHTML = status;
+}
+
+function clearAll() {
+    const fields = [
+        "bolt", "halfBolt",
+        "cash", "card", "halfCard", "tips",
+        "fuel", "halfFuel",
+        "outside", "halfOutside",
+        "tax",
+        "income", "incomeDetail", "cashCalc", "cashCalcDetail",
+        "summary", "status",
+        "name", "dateFrom", "dateTo"
+    ];
+
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === "INPUT") {
+                el.value = "";
+            } else {
+                el.innerHTML = "";
+            }
+        }
+    });
+}
+
+function getNum(id) {
+    return Number(document.getElementById(id).value) || 0;
+}
+
+function saveSettlement() {
+    calculate();
+    const name = document.getElementById("name").value.trim();
+    const dateFrom = document.getElementById("dateFrom").value;
+    const dateTo = document.getElementById("dateTo").value;
+    if (!name || !dateFrom || !dateTo) {
+        alert("Wpisz imię kierowcy oraz daty OD i DO.");
+        return;
+    }
+    const record = {
+        id: Date.now(),
+        savedAt: new Date().toLocaleString("pl-PL"),
+        name, dateFrom, dateTo,
+        bolt: getNum("bolt"), cash: getNum("cash"), card: getNum("card"),
+        tips: getNum("tips"), fuel: getNum("fuel"), outside: getNum("outside")
+    };
+    const records = JSON.parse(localStorage.getItem("pikerSettlements") || "[]");
+    records.unshift(record);
+    localStorage.setItem("pikerSettlements", JSON.stringify(records));
+    renderHistory();
+    alert("Rozliczenie zapisane.");
+}
+
+function loadSettlement(id) {
+    const records = JSON.parse(localStorage.getItem("pikerSettlements") || "[]");
+    const r = records.find(x => x.id === id);
+    if (!r) return;
+    document.getElementById("name").value = r.name;
+    document.getElementById("dateFrom").value = r.dateFrom;
+    document.getElementById("dateTo").value = r.dateTo;
+    ["bolt","cash","card","tips","fuel","outside"].forEach(k => {
+        document.getElementById(k).value = r[k] ?? "";
+    });
+    calculate();
+    window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+function deleteSettlement(id) {
+    if (!confirm("Usunąć to rozliczenie z historii?")) return;
+    let records = JSON.parse(localStorage.getItem("pikerSettlements") || "[]");
+    records = records.filter(x => x.id !== id);
+    localStorage.setItem("pikerSettlements", JSON.stringify(records));
+    renderHistory();
+}
+
+function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderHistory() {
+    const list = document.getElementById("historyList");
+    const records = JSON.parse(localStorage.getItem("pikerSettlements") || "[]");
+    if (!records.length) {
+        list.innerHTML = '<div class="history-empty">Brak zapisanych rozliczeń.</div>';
+        return;
+    }
+    list.innerHTML = records.map(r => `
+        <div class="history-item">
+            <strong>${esc(r.name)}</strong><br>
+            ${esc(r.dateFrom)} – ${esc(r.dateTo)}<br>
+            <small>Zapisano: ${esc(r.savedAt)}</small><br>
+            <button onclick="loadSettlement(${r.id})">OTWÓRZ</button>
+            <button onclick="loadSettlement(${r.id}); setTimeout(() => window.print(), 100)">PDF / DRUKUJ</button>
+            <button onclick="deleteSettlement(${r.id})">USUŃ</button>
+        </div>`).join("");
+}
+
+document.addEventListener("DOMContentLoaded", renderHistory);
+
+</script>
+
+</body>
+</html>
